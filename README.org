@@ -1,0 +1,42 @@
+* Pullbib - Let Emacs export your zotero libraries to a .bib file
+
+** Purpose
+
+=Pullbib= provides commands to pull your [[https://www.zotero.org/][Zotero]] library to a =.bib= file,
+updating its content. Basically, it means you can export your Zotero
+libraries to =.bib= files from within Emacs. No need to manually trigger
+export from within Zotero.
+
+For these commands to work, you have to install the [[https://github.com/retorquere/zotero-better-bibtex][BetterBibtex]]
+extension in Zotero.
+
+** Installation and setup
+
+For =pullbib= to work, you have to set up a list which maps the library
+URL to an associated bib file. To get the URL for the export, open
+Zotero (with BetterBibTex installed) and right-click on the library
+you want to export. See also
+https://github.com/retorquere/zotero-better-bibtex.
+
+#+begin_src emacs-lisp
+  (use-package pullbib
+    :quelpa (pullbib
+	     :fetcher github
+	     :repo "publicimageltd/pullbib")
+    :config
+    ;; Alist to map URL to a FILE:
+    (setq pullbib-url-map
+	  '(("https://127.0.0.1.........your url" . "~/my-bibfile.bib"))))
+#+end_src
+
+** Usage
+
+Interactively, call =pullbib-pull=. It will pull all libraries defined
+in =pullbib-url-map=.
+
+If called from Elisp (e.g. in a hook), pass =pullbib-url-map= or a
+similar structure explicitly to the function.
+
+* Changelog
+
+ + Initial commit.
