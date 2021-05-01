@@ -58,7 +58,7 @@ Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.bibl
 					 nil
 					 url
 					 "--no-progress-meter"
-					 (concat "-o" file))))
+					 (concat "-o" (expand-file-name file)))))
       (error "Pullbib fatal error: curl returns error code %d, see %s for details" result bufname))))
 
 ;;;###autoload
