@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defcustom pullbib-url-map
   '(("http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex" . "test.bib"))
   "Alist mapping URLs to filenames.
@@ -46,7 +48,7 @@ Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.bibl
 	 (curlname "curl")
 	 (result  0))
     (unless (executable-find curlname)
-      (error "pullbib fatal error: executable binary 'curl' could not be found"))
+      (error "Pullbib fatal error: executable binary 'curl' could not be found"))
     (when (get-buffer bufname)
       (kill-buffer bufname))
     (unless
@@ -57,7 +59,7 @@ Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.bibl
 					 url
 					 "--no-progress-meter"
 					 (concat "-o" file))))
-      (error "pullbib fatal error: curl returns error code %d, see %s for details" result bufname))))
+      (error "Pullbib fatal error: curl returns error code %d, see %s for details" result bufname))))
 
 ;;;###autoload
 (defun pullbib-pull (url-file-map)
