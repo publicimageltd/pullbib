@@ -39,4 +39,5 @@ similar structure explicitly to the function.
 
 * Changelog
 
+ + Expand filename before passing it to curl
  + Initial commit.
