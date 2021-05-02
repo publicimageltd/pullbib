@@ -115,17 +115,20 @@ is redirected to `pullbib-shell-output-buffer'."
 ;; * Interactive Functions
 
 ;;;###autoload
-(defun pullbib-pull (url-file-map)
+(defun pullbib-pull (&optional url-file-map)
   "Pull all urls in URL-FILE-MAP to their respective files.
 URL-FILE-MAP is an alist mapping URL strings (as car) to a
-filename (as cdr)."
+filename (as cdr).
+
+If URL-FILE-MAP is nil, use the value of `pullbib-url-map'
+instead."
   (interactive (list pullbib-url-map))
   (unless (pullbib-zotero-running-p)
     (error "Pullbib: You have to start Zotero to pull any library"))
   (when (get-buffer pullbib-shell-output-buffer)
     (kill-buffer pullbib-shell-output-buffer))
   (let (error-p)
-    (cl-dolist (kv url-file-map)
+    (cl-dolist (kv (or url-file-map pullbib-url-map))
       (let* ((file (cdr kv))
              (url  (car kv))
              (msg  (format "Pullbib: Pulling library '%s'..." file)))
