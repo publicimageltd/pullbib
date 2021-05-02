@@ -70,16 +70,16 @@ If curl exits with 0, return its output as a string. Else raise
 an error of type `curl-error' with curl's exit code. Shell output
 is redirected to `pullbib-shell-output-buffer'."
   (let ((result (apply #'call-process
-		       pullbib-curl-binary-name
-		       nil
-		       (list pullbib-shell-output-buffer t)
-		       nil
-		       args)))
+                       pullbib-curl-binary-name
+                       nil
+                       (list pullbib-shell-output-buffer t)
+                       nil
+                       args)))
     (if (eq 0 result)
-	(with-current-buffer pullbib-shell-output-buffer
-	  (buffer-string))
-      (signal 'curl-error 
-	      (list result)))))
+        (with-current-buffer pullbib-shell-output-buffer
+          (buffer-string))
+      (signal 'curl-error
+              (list result)))))
 
 ;; * Test if Zotero is running
 
@@ -98,19 +98,19 @@ is redirected to `pullbib-shell-output-buffer'."
   (when (get-buffer pullbib-shell-output-buffer)
     (kill-buffer pullbib-shell-output-buffer))
   (let ((ping-url "http://127.0.0.1:23119/connector/ping")
-	(ping-match "Zotero Connector Server is Available")
-	(result nil))
+        (ping-match "Zotero Connector Server is Available")
+        (result nil))
     (condition-case err
-	(progn 
-	  (setq result (pullbib-curl ping-url))
-	  (when (stringp result)
-	    ;; return t if response matches ping-match
-	    (string-match-p ping-match result)))
+        (progn
+          (setq result (pullbib-curl ping-url))
+          (when (stringp result)
+            ;; return t if response matches ping-match
+            (string-match-p ping-match result)))
       (curl-error (if (eq 7 (cadr err))
-		      ;; exit code 7 indicates host not reachable:
-		      nil
-		    ;; any other error might be due to other causes:
-		    (error "Pullbib: error trying to reach Zotero binary with URL %s" ping-url))))))			    
+                      ;; exit code 7 indicates host not reachable:
+                      nil
+                    ;; any other error might be due to other causes:
+                    (error "Pullbib: error trying to reach Zotero binary with URL %s" ping-url))))))
 
 ;; * Interactive Functions
 
@@ -127,21 +127,21 @@ filename (as cdr)."
   (let (error-p)
     (cl-dolist (kv url-file-map)
       (let* ((file (cdr kv))
-	     (url  (car kv))
-	     (msg  (format "Pullbib: Pulling library '%s'..." file)))
-	(condition-case-unless-debug err
-	    (progn
-	      (with-temp-message msg
-		(pullbib-curl url
-			      "--no-progress-meter"
-			      (concat "-o" (expand-file-name file))))
-	      (message (concat msg "done.")))
-	  (curl-error (with-current-buffer pullbib-shell-output-buffer
-			(setq error-p t)
-			(insert (error-message-string err) "\n"))))))
+             (url  (car kv))
+             (msg  (format "Pullbib: Pulling library '%s'..." file)))
+        (condition-case-unless-debug err
+            (progn
+              (with-temp-message msg
+                (pullbib-curl url
+                              "--no-progress-meter"
+                              (concat "-o" (expand-file-name file))))
+              (message (concat msg "done.")))
+          (curl-error (with-current-buffer pullbib-shell-output-buffer
+                        (setq error-p t)
+                        (insert (error-message-string err) "\n"))))))
     (when error-p
       (message "Pullbib: There were errors pulling the libraries, see %s for details"
-	       pullbib-shell-output-buffer))))
+               pullbib-shell-output-buffer))))
 
 (provide 'pullbib)
 ;;; pullbib.el ends here
