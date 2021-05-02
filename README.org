@@ -12,11 +12,8 @@ extension in Zotero.
 
 ** Installation and setup
 
-For =pullbib= to work, you have to set up a list which maps the library
-URL to an associated bib file. To get the URL for the export, open
-Zotero (with BetterBibTex installed) and right-click on the library
-you want to export. See also
-https://retorque.re/zotero-better-bibtex/exporting/pull/.
+You will currently have to clone this package with =quelpa= or =straight=.
+Here's an example:
 
 #+begin_src emacs-lisp
   (use-package pullbib
@@ -24,10 +21,25 @@ https://retorque.re/zotero-better-bibtex/exporting/pull/.
 	     :fetcher github
 	     :repo "publicimageltd/pullbib")
     :config
-    ;; Alist to map URL to a FILE:
-    (setq pullbib-url-map
-	  '(("https://127.0.0.1.........your url" . "~/my-bibfile.bib"))))
+    ;; Obligatory for pullbib to work, see below:
+    (setq pullbib-url-map <some-value>))
 #+end_src
+
+As you see in the example, for =pullbib= to work, you *must* set up a list
+which maps library URLs to associated bib files. Here's a real world
+example:
+
+#+begin_src emacs-lisp
+  (setq pullbib-url-map
+	'(("http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex" . "~/my-bibfile.bib")))
+#+end_src
+
+It makes sense to export to a library which is also used by other
+Emacs packages, e.g. =bibtex-completion=.
+
+To find the correct URL for the export, open Zotero (with BetterBibTex
+installed) and right-click on the library you want to export. See also
+https://retorque.re/zotero-better-bibtex/exporting/pull/.
 
 ** Usage
 
