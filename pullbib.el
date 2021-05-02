@@ -24,54 +24,124 @@
 
 ;;; Code:
 
+;; * Dependencies
+
 (require 'cl-lib)
 
-(defcustom pullbib-url-map
-  '(("http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex" . "test.bib"))
-  "Alist mapping URLs to filenames.
-See https://retorque.re/zotero-better-bibtex/exporting/pull/ for
-how to get or create the URL. This function uses the base url
-without additional arguments (that is, it should not contain an
-ampersand)."
-  :group 'pullbib
-  :type '(alist :key-type (string :tag "URL" :value-type file)))
+;; * Fixed Global Settings
 
-(defun pullbib-pull-url (url file)
-  "Using URL, pull zotero library to a .bib FILE.
+(defvar pullbib-curl-binary-name "curl"
+  "Name for the Curl executable binary.")
+
+(defvar pullbib-zotero-binary-name "zotero"
+  "Name for the Zotero executable binary.")
+
+;; * Customizable Global Settings
+
+(defcustom pullbib-shell-output-buffer "*Pullbib Shell Output*"
+  "Name for the buffer catching the output of the curl binary."
+  :group 'pullbib
+  :type 'string)
+
+(defcustom pullbib-url-map
+  nil
+  "Alist mapping URLs to filenames.
 See https://retorque.re/zotero-better-bibtex/exporting/pull/ for
 how to get or create the URL. This function uses the base url
 without additional arguments (that is, it should not contain an
 ampersand).
 
 Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex"
-  (let* ((bufname  "*Pullbib Shell Output*")
-	 (curlname "curl")
-	 (result  0))
-    (unless (executable-find curlname)
-      (error "Pullbib fatal error: executable binary 'curl' could not be found"))
-    (when (get-buffer bufname)
-      (kill-buffer bufname))
-    (unless
-	(eq 0 (setq result (call-process curlname
-					 nil
-					 (list bufname t)
-					 nil
-					 url
-					 "--no-progress-meter"
-					 (concat "-o" (expand-file-name file)))))
-      (error "Pullbib fatal error: curl returns error code %d, see %s for details" result bufname))))
+  :group 'pullbib
+  :type '(alist :key-type (string :tag "URL" :value-type file)))
+
+;; * Curl Stuff
+
+(define-error 'curl-error "Exit code returned by the curl binary")
+
+(defun pullbib-assert-curl-binary ()
+  "Raise an error if curl cannot be executed."
+  (unless (executable-find pullbib-curl-binary-name)
+    (error "Pullbib fatal error: executable binary 'curl' could not be found")))
+
+(defun pullbib-curl (&rest args)
+  "Call curl with ARGS.
+If curl exits with 0, return its output as a string. Else raise
+an error of type `curl-error' with curl's exit code. Shell output
+is redirected to `pullbib-shell-output-buffer'."
+  (let ((result (apply #'call-process
+		       pullbib-curl-binary-name
+		       nil
+		       (list pullbib-shell-output-buffer t)
+		       nil
+		       args)))
+    (if (eq 0 result)
+	(with-current-buffer pullbib-shell-output-buffer
+	  (buffer-string))
+      (signal 'curl-error 
+	      (list result)))))
+
+;; * Test if Zotero is running
+
+;; It is possible to start Zotero from within emacs if it is not
+;; running. However, it is hard to detach the Zotero process from
+;; Emacs. An associated process would also close when Emacs crashes.
+;; Further, opening it asynchronously still requires some confirmation
+;; from the user that Zotero is actually ready. Like an OS, Zotero
+;; takes some time initializing. So I do not see an easy way to "just
+;; open it", and there would be still the hazzle with having a process
+;; running which dies when Emacs (or Emacsclient) closes.
+
+(defun pullbib-zotero-running-p ()
+  "Test if zotero is runnning."
+  (pullbib-assert-curl-binary)
+  (when (get-buffer pullbib-shell-output-buffer)
+    (kill-buffer pullbib-shell-output-buffer))
+  (let ((ping-url "http://127.0.0.1:23119/connector/ping")
+	(ping-match "Zotero Connector Server is Available")
+	(result nil))
+    (condition-case err
+	(progn 
+	  (setq result (pullbib-curl ping-url))
+	  (when (stringp result)
+	    ;; return t if response matches ping-match
+	    (string-match-p ping-match result)))
+      (curl-error (if (eq 7 (cadr err))
+		      ;; exit code 7 indicates host not reachable:
+		      nil
+		    ;; any other error might be due to other causes:
+		    (error "Pullbib: error trying to reach Zotero binary with URL %s" ping-url))))))			    
+
+;; * Interactive Functions
 
 ;;;###autoload
 (defun pullbib-pull (url-file-map)
-  "Pull all urls in URL-FILE-MAP to their respective files."
+  "Pull all urls in URL-FILE-MAP to their respective files.
+URL-FILE-MAP is an alist mapping URL strings (as car) to a
+filename (as cdr)."
   (interactive (list pullbib-url-map))
-  (cl-dolist (kv url-file-map)
-    (let* ((file (cdr kv))
-	   (url  (car kv))
-	   (msg  (format "Pulling library '%s'..." file)))
-    (with-temp-message msg
-      (pullbib-pull-url url file))
-    (message (concat msg "done.")))))
+  (unless (pullbib-zotero-running-p)
+    (error "Pullbib: You have to start Zotero to pull any library"))
+  (when (get-buffer pullbib-shell-output-buffer)
+    (kill-buffer pullbib-shell-output-buffer))
+  (let (error-p)
+    (cl-dolist (kv url-file-map)
+      (let* ((file (cdr kv))
+	     (url  (car kv))
+	     (msg  (format "Pullbib: Pulling library '%s'..." file)))
+	(condition-case-unless-debug err
+	    (progn
+	      (with-temp-message msg
+		(pullbib-curl url
+			      "--no-progress-meter"
+			      (concat "-o" (expand-file-name file))))
+	      (message (concat msg "done.")))
+	  (curl-error (with-current-buffer pullbib-shell-output-buffer
+			(setq error-p t)
+			(insert (error-message-string err) "\n"))))))
+    (when error-p
+      (message "Pullbib: There were errors pulling the libraries, see %s for details"
+	       pullbib-shell-output-buffer))))
 
 (provide 'pullbib)
 ;;; pullbib.el ends here
