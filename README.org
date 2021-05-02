@@ -46,8 +46,9 @@ https://retorque.re/zotero-better-bibtex/exporting/pull/.
 Interactively, call =pullbib-pull=. It will pull all libraries defined
 in =pullbib-url-map=.
 
-If called from Elisp (e.g. in a hook), pass =pullbib-url-map= or a
-similar structure explicitly to the function.
+If called with no arguments from Elisp (e.g. in a hook),
+=pullbib-url-map= is also used.
+
 
 * Changelog
 
