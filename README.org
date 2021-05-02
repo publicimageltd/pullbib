@@ -16,7 +16,7 @@ For =pullbib= to work, you have to set up a list which maps the library
 URL to an associated bib file. To get the URL for the export, open
 Zotero (with BetterBibTex installed) and right-click on the library
 you want to export. See also
-https://github.com/retorquere/zotero-better-bibtex.
+https://retorque.re/zotero-better-bibtex/exporting/pull/.
 
 #+begin_src emacs-lisp
   (use-package pullbib
