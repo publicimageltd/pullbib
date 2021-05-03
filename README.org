@@ -3,9 +3,8 @@
 ** Purpose
 
 =Pullbib= provides commands to pull your [[https://www.zotero.org/][Zotero]] library to a =.bib= file,
-updating its content. Basically, it means you can export your Zotero
-libraries to =.bib= files from within Emacs. No need to manually trigger
-export from within Zotero.
+updating its content. Basically, it means you can trigger an export of
+your Zotero libraries to your =.bib= files from within Emacs.
 
 For these commands to work, you have to install the [[https://github.com/retorquere/zotero-better-bibtex][BetterBibtex]]
 extension in Zotero.
@@ -26,29 +25,39 @@ Here's an example:
 #+end_src
 
 As you see in the example, for =pullbib= to work, you *must* set up a list
-which maps library URLs to associated bib files. Here's a real world
-example:
+which maps library URLs to associated bibliography files. Here's a
+real world example:
 
 #+begin_src emacs-lisp
   (setq pullbib-url-map
 	'(("http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex" . "~/my-bibfile.bib")))
 #+end_src
 
-It makes sense to export to a library which is also used by other
-Emacs packages, e.g. =bibtex-completion=.
+It makes sense to export to a bibliography file which is also used by
+other Emacs packages, e.g. =bibtex-completion=.
 
-To find the correct URL for the export, open Zotero (with BetterBibTex
-installed) and right-click on the library you want to export. See also
+To find the correct URL, open Zotero (with BetterBibTex installed) and
+right-click on the library you want to export. See also
 https://retorque.re/zotero-better-bibtex/exporting/pull/.
 
 ** Usage
 
-Interactively, call =pullbib-pull=. It will pull all libraries defined
-in =pullbib-url-map=.
+Just call =pullbib-pull=, interactively or non-interactively (e.g. in a
+hook). It will pull all libraries defined in =pullbib-url-map=.
 
-If called with no arguments from Elisp (e.g. in a hook),
-=pullbib-url-map= is also used.
+For testing, you can pass the map explicitly as an argument to
+=pullbib-pull=.
 
+** Integration with bibtex-actions
+
+If you use [[https://github.com/bdarcus/bibtex-actions][bibtex-actions]], you can add =pullbib-pull= as a hook:
+
+#+begin_src emacs-lisp
+(setq bibtex-actions-force-refresh-hook   (list #'pullbib-pull))
+#+end_src
+
+With this setup, calling any =bibtex-action= with prefix argument (=C-u=)
+will trigger an export and update the candidates cache.
 
 * Changelog
 
