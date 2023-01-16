@@ -110,10 +110,10 @@ is redirected to `pullbib-shell-output-buffer'."
         (result nil))
     (condition-case err
         (progn
-          (setq result (pullbib-curl ping-url))
-          (when (stringp result)
-            ;; return t if response matches ping-match
-            (string-match-p ping-match result)))
+          (or (setq result (pullbib-curl ping-url))
+              (error "Pullbib: URL %s yielded no result" ping-url))
+          (or (string-match-p ping-match result)
+              (error "Pullbib: Pinging Zotero yielded unexpected result %s" result)))
       (curl-error (if (eq 7 (cadr err))
                       ;; exit code 7 indicates host not reachable:
                       nil
