@@ -47,13 +47,21 @@
   nil
   "Alist mapping URLs to filenames.
 See https://retorque.re/zotero-better-bibtex/exporting/pull/ for
-how to get or create the URL. This function uses the base url
+how to get or create the URL.  This function uses the base url
 without additional arguments (that is, it should not contain an
 ampersand).
 
-Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.biblatex"
+Example URL: http://127.0.0.1:23119/better-bibtex/collection?/library.biblatex"
   :group 'pullbib
   :type '(alist :key-type (string :tag "URL" :value-type file)))
+
+(defcustom pullbib-ping-url
+  '("http://127.0.0.1:23119/connector/ping" "Zotero is running")
+  "URL and regexp to 'ping' the Zotero Connector Service.
+Pullbib retrieves the URL and checks the result against the
+regexp.  A match indicates that Zotero is ready)."
+  :group 'pullbib
+  :type '(list (string :tag "URL") (regexp :tag "Regexp")))
 
 ;; * Curl Stuff
 
@@ -66,8 +74,8 @@ Example URL: http://127.0.0.1:23119/better-bibtex/export/library?/1/library.bibl
 
 (defun pullbib-curl (&rest args)
   "Call curl with ARGS.
-If curl exits with 0, return its output as a string. Else raise
-an error of type `curl-error' with curl's exit code. Shell output
+If curl exits with 0, return its output as a string.  Else raise
+an error of type `curl-error' with curl's exit code.  Shell output
 is redirected to `pullbib-shell-output-buffer'."
   (let ((result (apply #'call-process
                        pullbib-curl-binary-name
@@ -97,8 +105,8 @@ is redirected to `pullbib-shell-output-buffer'."
   (pullbib-assert-curl-binary)
   (when (get-buffer pullbib-shell-output-buffer)
     (kill-buffer pullbib-shell-output-buffer))
-  (let ((ping-url "http://127.0.0.1:23119/connector/ping")
-        (ping-match "Zotero Connector Server is Available")
+  (let ((ping-url (car pullbib-ping-url))
+        (ping-match (cadr pullbib-ping-url))
         (result nil))
     (condition-case err
         (progn
@@ -110,7 +118,7 @@ is redirected to `pullbib-shell-output-buffer'."
                       ;; exit code 7 indicates host not reachable:
                       nil
                     ;; any other error might be due to other causes:
-                    (error "Pullbib: error trying to reach Zotero binary with URL %s" ping-url))))))
+                    (error "Pullbib: could not reach Zotero binary using URL %s" ping-url))))))
 
 ;; * Interactive Functions
 
