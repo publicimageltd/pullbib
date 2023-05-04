@@ -122,15 +122,29 @@ is redirected to `pullbib-shell-output-buffer'."
 
 ;; * Interactive Functions
 
+(defun pullbib--select-target (url-file-map)
+  "Let the user select a single target from multiple entries in URL-FILE-MAP.
+Return a file map with only one single entry."
+  (if (eq 1 (length url-file-map))
+      url-file-map
+    (let* ((alist (mapcar (lambda (kv) (cons (cdr kv) (list kv))) url-file-map))
+           (keys  (mapcar #'car alist))
+           (key   (completing-read " Pull from Zotero into file: " keys nil t)))
+      (or (alist-get key alist nil nil #'equal)
+          (error "Something went wrong: Could not return URL file entry")))))
+
 ;;;###autoload
 (defun pullbib-pull (&optional url-file-map)
   "Pull all urls in URL-FILE-MAP to their respective files.
+If called interactively, ask the user to select the URL to
+import.
+
 URL-FILE-MAP is an alist mapping URL strings (as car) to a
 filename (as cdr).
 
 If URL-FILE-MAP is nil, use the value of `pullbib-url-map'
 instead."
-  (interactive (list pullbib-url-map))
+  (interactive (list (pullbib--select-target pullbib-url-map)))
   (unless (pullbib-zotero-running-p)
     (error "Pullbib: You have to start Zotero to pull any library"))
   (when (get-buffer pullbib-shell-output-buffer)
