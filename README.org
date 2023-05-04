@@ -2,9 +2,10 @@
 
 ** Purpose
 
-=Pullbib= provides commands to pull your [[https://www.zotero.org/][Zotero]] library to a =.bib= file,
-updating its content. Basically, it means you can trigger an export of
-your Zotero libraries to your =.bib= files from within Emacs.
+=Pullbib= provides commands to pull your [[https://www.zotero.org/][Zotero]] library to any file,
+i.e. a =.bib= file, updating its content. Basically, it means you can
+trigger an export of your Zotero libraries to your bibliograpy files
+from within Emacs.
 
 For these commands to work, you have to install the [[https://github.com/retorquere/zotero-better-bibtex][BetterBibtex]]
 extension in Zotero.
@@ -45,21 +46,16 @@ https://retorque.re/zotero-better-bibtex/exporting/pull/.
 Just call =pullbib-pull=, interactively or non-interactively (e.g. in a
 hook). It will pull all libraries defined in =pullbib-url-map=.
 
-For testing, you can pass the map explicitly as an argument to
-=pullbib-pull=.
+If =pullbib-url-map= contains multiple entries, interactive calls of
+=pullbib-pull= prompts the user to select the target file. The idea is
+that you usually don't want to update all files at once.
 
-** Integration with bibtex-actions
-
-If you use [[https://github.com/bdarcus/bibtex-actions][bibtex-actions]], you can add =pullbib-pull= as a hook:
-
-#+begin_src emacs-lisp
-(setq bibtex-actions-force-refresh-hook   (list #'pullbib-pull))
-#+end_src
-
-With this setup, calling any =bibtex-action= with prefix argument (=C-u=)
-will trigger an export and update the candidates cache.
+If called non-interactively, however, =pullbib-pull= does pull all
+files. The idea is that if used in a hook, you don't want to be
+disturbed by being prompted to select the target.
 
 * Changelog
 
+ + Add interactive selection of export target
  + Expand filename before passing it to curl
  + Initial commit.
